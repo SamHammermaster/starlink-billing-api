@@ -37,6 +37,18 @@ describe("checkout API", () => {
     expect(body.amount).toBe(120);
     expect(body.region).toBe("US");
   });
+
+  it("uses the signed-in customer's region when checkout sends region null", async () => {
+    const res = await app.request("/api/checkout", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-user-id": "cust_1002" },
+      body: JSON.stringify({ planId: "roam", region: null }),
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.region).toBe("EU");
+    expect(body.amount).toBe(151.8);
+  });
 });
 
 describe("account authorization", () => {
