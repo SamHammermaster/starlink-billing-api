@@ -24,4 +24,16 @@ describe("regression: mid-cycle upgrade quote (day 10 EU residential → priorit
       totalCents: 10400,
     });
   });
+
+  it("does not subtract an extra day after day 1 (remainingDays uses cycleDays - dayOfCycle)", () => {
+    const quote = quoteUpgrade({
+      fromMonthlyCents: 12000,
+      toMonthlyCents: 25000,
+      dayOfCycle: 30,
+      cycleDays: 30,
+      region: "US",
+    });
+    expect(quote.remainingDays).toBe(0);
+    expect(quote.totalCents).toBe(0);
+  });
 });
