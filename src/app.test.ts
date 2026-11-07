@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { app } from "./app";
 import { authorizeAccountRead } from "./authz";
+import { applyPayment } from "./payments";
 import { priceForCheckout } from "./pricing";
 
 describe("pricing", () => {
@@ -71,6 +72,47 @@ describe("account authorization", () => {
     const body = await res.json();
     expect(body.email).toBe("avery.lin@example.com");
     expect(body.cardLast4).toBe("4242");
+  });
+});
+
+describe("payments", () => {
+  it("applies the same payment id once", () => {
+    const once = applyPayment({ balanceCents: 12000, applied: [] }, "pay_1", 12000);
+    const twice = applyPayment(once, "pay_1", 12000);
+    expect(twice.balanceCents).toBe(0);
+    expect(twice.applied).toEqual(["pay_1"]);
+  });
+
+  it("confirms a repeated payment without charging twice", async () => {
+    const res = await app.request("/api/payments/confirm", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ paymentId: "pay_1", amountCents: 12000 }),
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.balanceCents).toBe(0);
+    expect(body.timesApplied).toBe(1);
+  });
+});
+
+describe("upgrades", () => {
+  it("quotes a mid-cycle residential to priority upgrade in the EU", async () => {
+    const res = await app.request("/api/upgrade", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        fromPlanId: "residential",
+        toPlanId: "priority",
+        dayOfCycle: 10,
+        cycleDays: 30,
+        region: "EU",
+      }),
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.remainingDays).toBe(20);
+    expect(body.totalCents).toBe(10400);
   });
 });
 

@@ -1,6 +1,8 @@
 import { Hono } from "hono";
+import { quoteUpgrade } from "./billing/quote";
 import { authorizeAccountRead } from "./authz";
 import { getCustomer, getPlan, plans } from "./data";
+import { applyPayment } from "./payments";
 import { priceForCheckout } from "./pricing";
 import { accountView, checkoutForm, overview, page, planCatalog } from "./view";
 
@@ -54,6 +56,34 @@ app.post("/api/checkout", async (c) => {
     region: priced.region,
     amount: priced.amount,
   });
+});
+
+app.post("/api/payments/confirm", async (c) => {
+  const body = await c.req.json().catch(() => ({} as { paymentId?: string; amountCents?: number }));
+  const paymentId = body.paymentId || "pay_demo";
+  const amountCents = body.amountCents ?? 12000;
+  let ledger = applyPayment({ balanceCents: 12000, applied: [] }, paymentId, amountCents);
+  ledger = applyPayment(ledger, paymentId, amountCents);
+  return c.json({
+    ok: ledger.balanceCents === 12000 - amountCents,
+    balanceCents: ledger.balanceCents,
+    timesApplied: ledger.applied.filter((id) => id === paymentId).length,
+  });
+});
+
+app.post("/api/upgrade", async (c) => {
+  const body = await c.req.json().catch(() => ({} as { fromPlanId?: string; toPlanId?: string; dayOfCycle?: number; cycleDays?: number; region?: string }));
+  const from = getPlan(body.fromPlanId || "");
+  const to = getPlan(body.toPlanId || "");
+  if (!from || !to) return c.json({ error: "unknown plan" }, 400);
+  const quote = quoteUpgrade({
+    fromMonthlyCents: Math.round(from.priceUsd * 100),
+    toMonthlyCents: Math.round(to.priceUsd * 100),
+    dayOfCycle: body.dayOfCycle ?? 1,
+    cycleDays: body.cycleDays ?? 30,
+    region: body.region || "US",
+  });
+  return c.json({ ok: true, ...quote });
 });
 
 app.get("/", (c) => {
