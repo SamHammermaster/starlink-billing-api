@@ -19,6 +19,6 @@ export function priceForCheckout(
   requestedRegion: string | null,
   customerRegion: string,
 ): { region: string; amount: number } {
-  const region = requestedRegion ?? customerRegion;
+  const region = (requestedRegion ?? customerRegion).toLowerCase();
   return { region, amount: convertUsd(amountUsd, region) };
 }
