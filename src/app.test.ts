@@ -25,6 +25,18 @@ describe("checkout API", () => {
     expect(body.amount).toBe(120);
     expect(body.region).toBe("US");
   });
+
+  it("prices checkout when the region field is absent from the body", async () => {
+    const res = await app.request("/api/checkout", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-user-id": "cust_1001" },
+      body: JSON.stringify({ planId: "residential" }),
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.amount).toBe(120);
+    expect(body.region).toBe("US");
+  });
 });
 
 describe("account authorization", () => {
