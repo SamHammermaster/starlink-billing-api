@@ -62,8 +62,7 @@ app.post("/api/payments/confirm", async (c) => {
   const body = await c.req.json().catch(() => ({} as { paymentId?: string; amountCents?: number }));
   const paymentId = body.paymentId || "pay_demo";
   const amountCents = body.amountCents ?? 12000;
-  let ledger = applyPayment({ balanceCents: 12000, applied: [] }, paymentId, amountCents);
-  ledger = applyPayment(ledger, paymentId, amountCents);
+  const ledger = applyPayment({ balanceCents: 12000, applied: [] }, paymentId, amountCents);
   return c.json({
     ok: ledger.balanceCents === 12000 - amountCents,
     balanceCents: ledger.balanceCents,
