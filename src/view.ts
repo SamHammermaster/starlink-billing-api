@@ -85,7 +85,7 @@ export function overview(customer: Customer, plan: Plan): string {
     .join("");
   return `
     <h1>Overview</h1>
-    <p class="lede">Billing for the terminal assigned to ${escapeHtml(customer.name)}.</p>
+    <p class="lede">Billing terminal assigned to ${escapeHtml(customer.name)}.</p>
     <div class="grid">
       <section class="card">
         <p class="kicker">Current plan</p>
