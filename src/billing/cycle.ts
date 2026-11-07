@@ -5,5 +5,5 @@ export function remainingDays(dayOfCycle: number, cycleDays: number): number {
   if (dayOfCycle < 1 || dayOfCycle > cycleDays) {
     throw new Error(`day ${dayOfCycle} is outside a ${cycleDays}-day cycle`);
   }
-  return dayOfCycle;
+  return cycleDays - dayOfCycle;
 }

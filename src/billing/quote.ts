@@ -23,9 +23,9 @@ export function quoteUpgrade(input: {
 }): UpgradeQuote {
   const left = remainingDays(input.dayOfCycle, input.cycleDays);
   const creditCents = Math.round((input.fromMonthlyCents * left) / input.cycleDays);
-  const chargeCents = input.toMonthlyCents;
-  const netCents = chargeCents;
-  const taxCents = Math.round(input.toMonthlyCents * (TAX_RATE[input.region] ?? 0));
+  const chargeCents = Math.round((input.toMonthlyCents * left) / input.cycleDays);
+  const netCents = chargeCents - creditCents;
+  const taxCents = Math.round(netCents * (TAX_RATE[input.region] ?? 0));
   return {
     remainingDays: left,
     creditCents,
