@@ -1,7 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { app } from "./app";
 import { authorizeAccountRead } from "./authz";
-import { applyPayment } from "./payments";
+import { applyPayment, resetPaymentLedger } from "./payments";
 import { priceForCheckout } from "./pricing";
 
 describe("pricing", () => {
@@ -76,6 +76,10 @@ describe("account authorization", () => {
 });
 
 describe("payments", () => {
+  beforeEach(() => {
+    resetPaymentLedger();
+  });
+
   it("applies the same payment id once", () => {
     const once = applyPayment({ balanceCents: 12000, applied: [] }, "pay_1", 12000);
     const twice = applyPayment(once, "pay_1", 12000);

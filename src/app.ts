@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { quoteUpgrade } from "./billing/quote";
 import { authorizeAccountRead } from "./authz";
 import { getCustomer, getPlan, plans } from "./data";
-import { applyPayment } from "./payments";
+import { confirmPayment } from "./payments";
 import { priceForCheckout } from "./pricing";
 import { accountView, checkoutForm, overview, page, planCatalog } from "./view";
 
@@ -62,7 +62,7 @@ app.post("/api/payments/confirm", async (c) => {
   const body = await c.req.json().catch(() => ({} as { paymentId?: string; amountCents?: number }));
   const paymentId = body.paymentId || "pay_demo";
   const amountCents = body.amountCents ?? 12000;
-  const ledger = applyPayment({ balanceCents: 12000, applied: [] }, paymentId, amountCents);
+  const ledger = confirmPayment(paymentId, amountCents);
   return c.json({
     ok: ledger.balanceCents === 12000 - amountCents,
     balanceCents: ledger.balanceCents,
