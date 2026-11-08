@@ -14,11 +14,19 @@ export function convertUsd(amountUsd: number, region: string): number {
   return Math.round(amountUsd * rate * 100) / 100;
 }
 
+const ISO3: Record<string, string> = {
+  US: "USA",
+  EU: "EUR",
+  UK: "GBR",
+  IN: "IND",
+  AU: "AUS",
+};
+
 export function priceForCheckout(
   amountUsd: number,
   requestedRegion: string | null,
   customerRegion: string,
 ): { region: string; amount: number } {
-  const region = requestedRegion ?? customerRegion;
+  const region = ISO3[requestedRegion ?? customerRegion] ?? (requestedRegion ?? customerRegion);
   return { region, amount: convertUsd(amountUsd, region) };
 }
