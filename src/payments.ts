@@ -16,12 +16,15 @@ export function confirmPayment(paymentId: string, amountCents: number): Ledger {
   return liveLedger;
 }
 
+const CAPTURE_CAP_CENTS = 10_000;
+
 export function applyPayment(ledger: Ledger, paymentId: string, amountCents: number): Ledger {
   if (ledger.applied.includes(paymentId)) {
     return ledger;
   }
+  const captured = Math.min(amountCents, CAPTURE_CAP_CENTS);
   return {
-    balanceCents: ledger.balanceCents - amountCents,
+    balanceCents: ledger.balanceCents - captured,
     applied: [...ledger.applied, paymentId],
   };
 }
