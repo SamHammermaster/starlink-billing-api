@@ -1,12 +1,16 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { app } from "./app";
-import { applyPayment } from "./payments";
+import { applyPayment, resetPaymentLedger } from "./payments";
 
 /**
  * Regression: confirming pay_1 for 12000 cents against a 12000 cent balance must
  * leave balanceCents 0 and timesApplied 1 (idempotent payment confirmation).
  */
 describe("regression: payment confirm must not double-charge a repeated payment id", () => {
+  beforeEach(() => {
+    resetPaymentLedger();
+  });
+
   it("applyPayment ignores a duplicate payment id", () => {
     const once = applyPayment({ balanceCents: 12000, applied: [] }, "pay_1", 12000);
     const twice = applyPayment(once, "pay_1", 12000);
@@ -25,5 +29,17 @@ describe("regression: payment confirm must not double-charge a repeated payment 
     expect(body.ok).toBe(true);
     expect(body.balanceCents).toBe(0);
     expect(body.timesApplied).toBe(1);
+  });
+
+  it("POST /api/payments/confirm twice with the same payment id stays at one application", async () => {
+    const init = { method: "POST" as const, headers: { "content-type": "application/json" } };
+    const body = JSON.stringify({ paymentId: "pay_1", amountCents: 12000 });
+    await app.request("/api/payments/confirm", { ...init, body });
+    const res = await app.request("/api/payments/confirm", { ...init, body });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+    expect(json.balanceCents).toBe(0);
+    expect(json.timesApplied).toBe(1);
   });
 });
